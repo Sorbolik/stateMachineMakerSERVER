@@ -13,6 +13,10 @@ npm run deploy   # pubblica (lo fa già Cloudflare a ogni push su main)
 
 ## API
 
+Ogni richiesta vuole `Authorization: Bearer <ADMIN_KEY>`, altrimenti `401`: il
+database è solo del proprietario. Senza il secret `ADMIN_KEY` sul Worker nessuno entra.
+In locale la chiave sta in `.dev.vars` (`ADMIN_KEY=...`, non va su git).
+
 | Metodo | Percorso | Risposta |
 | --- | --- | --- |
 | `GET` | `/machines` | `[{ "id", "name", "updated" }]`, dalla più recente |
@@ -44,7 +48,9 @@ database `state-machines` e lo collega.
 
 L'API non ha un indirizzo pubblico (`workers_dev: false`): si raggiunge solo da
 `https://state-machine-maker.sergiosorbi.workers.dev/api/...`, cioè passando
-dall'editor, che è protetto da Cloudflare Access. `ALLOWED_ORIGINS` serve solo
-per lo sviluppo in locale dell'editor.
+dall'editor. `ALLOWED_ORIGINS` serve solo per lo sviluppo in locale dell'editor.
+
+La chiave si imposta una volta: dashboard → `state-machine-api` → Settings →
+Variables and Secrets → Secret `ADMIN_KEY` (oppure `npx wrangler secret put ADMIN_KEY`).
 
 Ogni push su `main` viene pubblicato da Cloudflare Workers Builds.
