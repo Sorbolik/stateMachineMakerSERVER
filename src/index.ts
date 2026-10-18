@@ -1,4 +1,5 @@
 // State machine API: stores machines as JSON in one D1 table.
+// Every request needs `Authorization: Bearer <ADMIN_KEY>`: the database is the owner's only.
 //
 //   GET    /machines       list   -> [{ id, name, updated }]
 //   POST   /machines       create -> { id }
@@ -8,7 +9,7 @@
 
 import { parseMachine } from "./machine";
 
-type Env = { DB: D1Database; ALLOWED_ORIGINS: string };
+type Env = { DB: D1Database; ALLOWED_ORIGINS: string; ADMIN_KEY?: string };
 
 const MAX_BODY = 200_000; // bytes
 const MAX_MACHINES = 1000;
@@ -35,6 +36,16 @@ class HttpError extends Error {
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
+const sha256 = async (text: string) => crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+
+/** Compares the bearer token with ADMIN_KEY in constant time. No ADMIN_KEY set means nobody gets in. */
+async function isOwner(request: Request, env: Env): Promise<boolean> {
+  const token = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
+  if (!env.ADMIN_KEY || !token) return false;
+  const [a, b] = await Promise.all([sha256(token), sha256(env.ADMIN_KEY)]);
+  return crypto.subtle.timingSafeEqual(a, b);
+}
+
 async function readMachine(request: Request) {
   const body = await request.text();
   if (body.length > MAX_BODY) throw new HttpError(413, "machine too large");
@@ -49,6 +60,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   const { pathname } = new URL(request.url);
   const [, collection, id, extra] = pathname.split("/");
   if (collection !== "machines" || extra !== undefined) throw new HttpError(404, "not found");
+  if (!(await isOwner(request, env))) throw new HttpError(401, "unauthorized");
   await ensureSchema(env.DB);
   const db = env.DB;
   const now = new Date().toISOString();
@@ -100,7 +112,7 @@ function cors(request: Request, env: Env): Record<string, string> {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, POST, PUT, DELETE",
-    "access-control-allow-headers": "content-type",
+    "access-control-allow-headers": "content-type, authorization",
     vary: "origin",
   };
 }
