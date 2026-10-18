@@ -40,5 +40,9 @@ machines(id TEXT PRIMARY KEY, name TEXT, data TEXT, updated TEXT)
 ## Pubblicazione
 
 `wrangler.jsonc` non ha `database_id`: al primo deploy Wrangler crea da solo il
-database `state-machines` e lo collega. `ALLOWED_ORIGINS` elenca i siti che
-possono chiamare l'API dal browser.
+database `state-machines` e lo collega.
+
+L'API non ha un indirizzo pubblico (`workers_dev: false`): si raggiunge solo da
+`https://state-machine-maker.sergiosorbi.workers.dev/api/...`, cioè passando
+dall'editor, che è protetto da Cloudflare Access. `ALLOWED_ORIGINS` serve solo
+per lo sviluppo in locale dell'editor.
