@@ -46,3 +46,5 @@ L'API non ha un indirizzo pubblico (`workers_dev: false`): si raggiunge solo da
 `https://state-machine-maker.sergiosorbi.workers.dev/api/...`, cioè passando
 dall'editor, che è protetto da Cloudflare Access. `ALLOWED_ORIGINS` serve solo
 per lo sviluppo in locale dell'editor.
+
+Ogni push su `main` viene pubblicato da Cloudflare Workers Builds.
