@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "state-machine-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "observability": { "enabled": true },
+  // No database_id: `wrangler deploy` creates the D1 database the first time
+  "d1_databases": [{ "binding": "DB", "database_name": "state-machines" }],
+  "vars": {
+    // Comma separated origins allowed to call the API from a browser
+    "ALLOWED_ORIGINS": "https://state-machine-maker.sergiosorbi.workers.dev,http://localhost:5173"
+  }
+}
